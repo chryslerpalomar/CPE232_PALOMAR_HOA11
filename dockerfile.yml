@@ -1,0 +1,66 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install docker
+    shell:
+      sudo apt-get install docker.io -y
+
+  - name: install docker sdk
+    shell:
+      pip3 install docker-py
+
+  - name: start / enable docker service
+    service:
+      name: docker
+      state: started
+      enabled: true
+
+  - name: add docker to user group
+    shell:
+      usermod -aG docker chrysler
+
+  - name: restart docker service
+    service:
+      name: docker
+      state: restarted
+      enabled: true
+
+  - name: dockerfile directory 
+    file:
+      path: ./root/demo-dockerfile
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: copy dockerfile
+    copy:
+      src: dockerfile
+      dest: ./root/demo-dockerfile/dockerfile
+      owner: root
+      group: root
+      mode: '0755'
+
+#  - name: build docker
+#    docker_image:
+#      name: containeransible
+#      build:
+#        path: ./root/demo-dockerfile
+#        args:
+#          listen_port: 8080
+      #state: present
+
+#  - name: containerized app accessibility
+#    shell:
+#      docker run -it -d -p 8080:80 containeransible
+
+  - name: copy dockerfile
+    docker_container:
+      name: my_container
+      image: containeransible
+      state: started
+      ports:
+        - "8080:80"
+
