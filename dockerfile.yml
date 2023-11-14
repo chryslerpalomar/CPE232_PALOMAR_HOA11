@@ -6,6 +6,13 @@
   - name: install docker
     shell:
       sudo apt-get install docker.io -y
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install docker
+    yum:
+      name: docker
+      state: present
+    when: ansible_distribution == "CentOS"
 
   - name: install docker sdk
     shell:
@@ -29,7 +36,7 @@
 
   - name: dockerfile directory 
     file:
-      path: ./root/demo-dockerfile
+      path: /root/demo-dockerfile
       state: directory
       owner: root
       group: root
@@ -37,30 +44,31 @@
 
   - name: copy dockerfile
     copy:
-      src: dockerfile
-      dest: ./root/demo-dockerfile/dockerfile
+      src: dockerfile1
+      dest: /root/demo-dockerfile/dockerfile
       owner: root
       group: root
       mode: '0755'
+    when: ansible_distribution == "Ubuntu"
 
-#  - name: build docker
-#    docker_image:
-#      name: containeransible
-#      build:
-#        path: ./root/demo-dockerfile
-#        args:
-#          listen_port: 8080
-      #state: present
-
-#  - name: containerized app accessibility
-#    shell:
-#      docker run -it -d -p 8080:80 containeransible
 
   - name: copy dockerfile
-    docker_container:
-      name: my_container
-      image: containeransible
-      state: started
-      ports:
-        - "8080:80"
+    copy:
+      src: dockerfile2
+      dest: /root/demo-dockerfile/dockerfile
+      owner: root
+      group: root
+      mode: '0755'
+    when: ansible_distribution == "CentOS"
+
+  - name: build docker image
+    shell:
+      cmd: docker build -t docker_image /root/demo-dockerfile
+    when: ansible_distribution == "Ubuntu"
+
+
+  - name: build docker image
+    shell:
+      cmd: docker run -d -p 8080 --name docker_container5 docker_image
+    when: ansible_distribution == "Ubuntu"
 
